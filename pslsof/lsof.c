@@ -31,17 +31,17 @@ int main(int argc, char const *argv[]) {
  		return 1;
 	}
 
-	char curproc_name[100];
-	char curfd_dirname[100];
-	char curfd_name[100];
-	char curfd_realname[100];
+	char curproc_name[PATH_MAX];
+	char curfd_dirname[PATH_MAX];
+	char curfd_name[PATH_MAX];
+	char curfd_realname[PATH_MAX];
 
 	while ((curproc_dirent = readdir(proc_dir)) != NULL) {
  		struct stat curproc_stat;
 		if (!isnumeric(curproc_dirent -> d_name)) {
 			continue;
 		}
- 		sprintf(curproc_name, "/proc/%s", curproc_dirent -> d_name);
+ 		snprintf(curproc_name, PATH_MAX - 1, "/proc/%s", curproc_dirent -> d_name);
  		if (stat(curproc_name, &curproc_stat) == -1) {
 			DEBUG_PRINT("Unable to stat file: %s error: %s\n", curproc_name, strerror(errno));
   			continue;
@@ -52,7 +52,7 @@ int main(int argc, char const *argv[]) {
 		struct dirent *curfd_dirent;
 		DIR *curfd_dir;
 
-		sprintf(curfd_dirname, "%s/fd", curproc_name);
+		snprintf(curfd_dirname, PATH_MAX - 1, "%s/fd", curproc_name);
 		if ((curfd_dir = opendir(curfd_dirname)) == NULL) {
 	 		DEBUG_PRINT("Can't open fd %s\n", curfd_dirname);
 	 		continue;
@@ -62,10 +62,10 @@ int main(int argc, char const *argv[]) {
 			if (!isnumeric(curfd_dirent -> d_name)) {
 				continue;
 			}
-			sprintf(curfd_name, "%s/%s", curfd_dirname, curfd_dirent -> d_name);
+			snprintf(curfd_name, PATH_MAX - 1, "%s/%s", curfd_dirname, curfd_dirent -> d_name);
 
 			int len = 0;
-			if ((len = readlink(curfd_name, curfd_realname, 99)) == -1) {
+			if ((len = readlink(curfd_name, curfd_realname, PATH_MAX - 1)) == -1) {
 				DEBUG_PRINT("Failed to read link for %s, error: %s\n", curfd_name, strerror(errno));
 				continue;
 			}
