@@ -57,5 +57,7 @@ int main(int argc, char const *argv[]) {
 		curproc_realexename[len] = '\0';
 		printf("%s\t%s\n", curproc_dirent -> d_name, curproc_realexename);
 	}
+
+	closedir(proc_dir);
 	return 0;
 }
