@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OFFSET (16*((long long)1)<<20)
+#define OFFSET (4*((long long)1)<<20)
 #define ATTEMPTS 1014
 #define MAXOFFSET 512
 
@@ -17,27 +17,25 @@ void cache_clear(){
 }
 
 static inline void measure_cache(int size) {
-	long long array_size = ((long long)(size+1)) * OFFSET;
-	void* array = malloc((size+1) * OFFSET);
-	memset(array, 0, array_size);
+	long* array = (long *) malloc((size+1) * OFFSET * sizeof(long));
 
 	int last_array_index = 0;
 	for (int offset_num = 0; offset_num < MAXOFFSET / (size+1); offset_num++){
 		for (int fragment_num = 0; fragment_num < size; fragment_num++){
-			int array_index = fragment_num*OFFSET + offset_num*sizeof(long long);
-			*(long long *)(array + array_index) = array_index + OFFSET;
+			int array_index = fragment_num*OFFSET + offset_num;
+			array[array_index] = array_index + OFFSET;
 		}
-		last_array_index = size*OFFSET + offset_num*sizeof(long long);
-		*(long long *)(array + last_array_index) = (offset_num + 1)*sizeof(long long);
+		last_array_index = size*OFFSET + offset_num;
+		array[last_array_index] = offset_num + 1;
 	}
-	*(long long *)(array + last_array_index) = 0;
+	array[last_array_index] = 0;
 
 	cache_clear();
 	long long start_time = rdtsc();
 	for (int i = 0; i < ATTEMPTS; i++){
-		int index = *(long long *)array;
+		int index = array[0];
 		while (index != 0) {
-			index = *(long long *)(array + index);
+			index = array[index];
 		}
 	}
 	long long end_time = rdtsc();
