@@ -17,7 +17,7 @@ static int child_func(void *argv){
 		printf("Cannot umount tmp: %s\n", strerror(errno));
 		exit(1);
 	}
-	if (mount("proc", "/tmp", "tmpfs", MS_NOSUID|MS_NOEXEC|MS_NODEV, NULL)) {
+	if (mount("tmp", "/tmp", "tmpfs", MS_NOSUID|MS_NOEXEC|MS_NODEV, NULL)) {
 		printf("Cannot mount tmpfs: %s\n", strerror(errno));
 		exit(1);
 	}
