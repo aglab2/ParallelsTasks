@@ -177,6 +177,9 @@ void traverse_dirent(struct fat_dirent* dirent, char *needle, char *prefix, stru
 		if (dir_entry.attr == 0xF) continue; //TODO: Process files with strange attributes
 
 		char *filename = get_name(dir_entry);
+
+		if (needle == NULL)
+			printf("%s%-12s | ", prefix, filename);
 		if (dir_entry.attr & 0x10){
 			putchar('\n');
 			struct fat_dirent *dir = (struct fat_dirent*) malloc(sizeof(struct fat_dirent));
@@ -194,7 +197,6 @@ void traverse_dirent(struct fat_dirent* dirent, char *needle, char *prefix, stru
 			continue;
 		}
 		if (needle == NULL){
-			printf("%s%-12s | ", prefix, filename);
 			if (dir_entry.attr & 0x01) putchar('R'); else putchar(' ');
 			if (dir_entry.attr & 0x02) putchar('H'); else putchar(' ');
 			if (dir_entry.attr & 0x04) putchar('S'); else putchar(' ');
