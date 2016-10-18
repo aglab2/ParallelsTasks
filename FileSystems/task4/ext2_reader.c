@@ -11,15 +11,9 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define	EXT2_S_IFMT	0xF000	/* format mask  */
-#define	EXT2_S_IFSOCK	0xC000	/* socket */
-#define	EXT2_S_IFLNK	0xA000	/* symbolic link */
-#define	EXT2_S_IFREG	0x8000	/* regular file */
-#define	EXT2_S_IFBLK	0x6000	/* block device */
-#define	EXT2_S_IFDIR	0x4000	/* directory */
-#define	EXT2_S_IFCHR	0x2000	/* character device */
-#define	EXT2_S_IFIFO	0x1000	/* fifo */
+#include <limits.h>
 
+#define EXT2_S_IFDIR	0x4000	/* directory */
 #define PTRSIZE 4
 
 #define INDIRECT_INDEX 12
@@ -50,6 +44,7 @@ void usage_and_die(const char *name) {
 	exit(1);
 }
 
+//Factory to generate blocks, made to work with indirect blocks
 struct block_factory{
 	int fd;
 	long int block_size;
@@ -58,6 +53,7 @@ struct block_factory{
 	unsigned *indirect_source;
 };
 
+//Factory to generate data, get from block factory to remove duplication
 struct data_factory{
 	struct block_factory bf;
 	void *current_data;
@@ -166,10 +162,10 @@ struct ext2_inode generate_inode(int inode_number, struct ext2_metadata *md){
 }
 
 //Returns -1 if file is not a directory
-int list_directory(int inode_number, struct ext2_metadata *md) {
+//Path needle==NULL to print all directories
+int traverse_directory(int inode_number, const char *needle, struct ext2_metadata *md) {
 	int fd = md -> fd;
 	unsigned block_size = md -> block_size;
-	unsigned block_size_modifier = md -> block_size_modifier;
 
 	struct ext2_inode inode = generate_inode(inode_number, md);
 
@@ -179,33 +175,37 @@ int list_directory(int inode_number, struct ext2_metadata *md) {
 	if (!(inode.i_mode & EXT2_S_IFDIR))
 		return -1;
 
-	int block_ctr = 0;
-	int block_cnt = inode.i_blocks / block_size_modifier;
-	for (block_ctr = 0; block_ctr < block_cnt; block_ctr++){
-		int cur_block = block_factory_next(&bf);
 
-		struct ext2_dir_entry_2 dir_entry;
+	struct data_factory df;
+	data_factory_init(&df, &inode, md);
+
+	int read_size;
+	void *data = NULL;
+
+	while((data = data_factory_next(&df, &read_size)) != NULL) {
 		long int cur_read_size = 0;
+		struct ext2_dir_entry_2 *dir_entry = NULL;
 
 		while(cur_read_size < block_size) { //Dirent structures should be aligned to block_size
-			lseek(fd, cur_block*block_size + cur_read_size, SEEK_SET);
-			read(fd, &dir_entry, EXT2_DIR_ENTRY_HEADER_SIZE);
+			dir_entry = (struct ext2_dir_entry_2 *) ((char *)data + cur_read_size);
 
-			if (dir_entry.inode == 0) //End of directory entries -> quiting
+			if (dir_entry->inode == 0) //End of directory entries -> quiting
 				break;
 
-			char *file_name = (char *) malloc(dir_entry.name_len + 1);
-			file_name[dir_entry.name_len] = '\0';
-			read(fd, file_name, dir_entry.name_len);
-			printf("%s\n", file_name);
+			if (!needle){
+				printf("%.*s\n", dir_entry -> name_len, dir_entry -> name);
+			}else{
+				if (!strncmp(dir_entry -> name, needle, dir_entry -> name_len)) {
+					return dir_entry -> inode;
+				}
+			}
 
-			free(file_name);
 
-			cur_read_size += dir_entry.rec_len;
+			cur_read_size += dir_entry -> rec_len;
 		}
 	}
 
-	block_factory_fini(&bf);
+	data_factory_fini(&df);
 	return 0;
 }
 
@@ -226,8 +226,8 @@ int print_file(int inode_number, struct ext2_metadata *md) {
 	return 0;
 }
 
-int main(int argc, char const *argv[]) {
-	if (argc < 3) usage_and_die(argv[0]);
+int main(int argc, char *argv[]) {
+	if (argc < 4) usage_and_die(argv[0]);
 
 	int fd = open(argv[1], O_RDONLY);
 
@@ -269,12 +269,21 @@ int main(int argc, char const *argv[]) {
 			close(fd);
 			usage_and_die(argv[0]);
 		}
+	}else{ //Generate inode ourselves
+		inode_number = EXT2_ROOT_INO;
+		char *base_path, *saveptr, *token;
+		for (base_path = argv[3]; ;base_path = NULL) {
+              	token = strtok_r(base_path, "/", &saveptr);
+			if (token == NULL)
+       			break;
+			if (!token[0]) //Non empty string
+				continue;
+			inode_number = traverse_directory(inode_number, token, &metadata);
+		}
 	}
 
-
-
 	if (strchr(argv[2], 'd')) { //Working with directory listing
-		if (list_directory(inode_number, &metadata) == -1){
+		if (traverse_directory(inode_number, NULL, &metadata) == -1){
 			fprintf(stderr, "Not a directory!");
 		}
 		goto _end;
@@ -286,6 +295,5 @@ int main(int argc, char const *argv[]) {
 	}
 
 _end:	close(fd);
-
 	return 0;
 }
