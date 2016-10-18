@@ -228,8 +228,6 @@ int main(int argc, char *argv[]){
 		puts("    File attributes are printed after file\n");
 		puts("    R - Read Only, H - hidden file, S - system file\n");
 		puts("    Y - Special Entry, D - Directory, M - Modified Flag\n");
-		printf("Usage: %s IMAGE [FILE]", argv[0]);
-		printf("Usage: %s IMAGE [FILE]", argv[0]);
 		exit(1);
 	}
 	int fd = open(argv[1], O_RDONLY);
