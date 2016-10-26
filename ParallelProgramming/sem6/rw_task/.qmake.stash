@@ -1,0 +1,19 @@
+QMAKE_DEFAULT_INCDIRS = \
+    /opt/intel/composerxe/linux/ipp/include \
+    /opt/intel/composerxe/linux/mkl/include \
+    /opt/intel/composerxe/linux/tbb/include \
+    /usr/include/c++/6.2.1 \
+    /usr/include/c++/6.2.1/x86_64-pc-linux-gnu \
+    /usr/include/c++/6.2.1/backward \
+    /usr/lib/gcc/x86_64-pc-linux-gnu/6.2.1/include \
+    /usr/local/include \
+    /usr/lib/gcc/x86_64-pc-linux-gnu/6.2.1/include-fixed \
+    /usr/include
+QMAKE_DEFAULT_LIBDIRS = \
+    /usr/lib/gcc/x86_64-pc-linux-gnu/6.2.1 \
+    /usr/lib \
+    /lib \
+    /opt/intel/composerxe/linux/ipp/lib/intel64 \
+    /opt/intel/composerxe/linux/compiler/lib/intel64 \
+    /opt/intel/composerxe/linux/mkl/lib/intel64 \
+    /opt/intel/composerxe/linux/tbb/lib/intel64/gcc4.7
