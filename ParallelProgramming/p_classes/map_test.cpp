@@ -11,7 +11,7 @@ struct thread_data{
 #define NUM_THREADS 8
 #define TEST_SIZE 1000
 
-#define MAX_THREADS 2
+#define MAX_THREADS 4
 
 #define ASSERT(x, ...) do{ if (!(x)) { printf(__VA_ARGS__); assert(x); } }while(0);
 
@@ -26,9 +26,11 @@ void *thread_func(void *ptr){
 	int i;
 
 	for (i = 0; i < TEST_SIZE; i++)
-		map->insert(std::pair<int,int>(num+i, num+i*2));
+		map->insert(std::make_pair<int, int>(num+i, num+i*2));
 	for (i = 0; i < TEST_SIZE; i++){
-		int search = map->find(num+i)->first;
+		auto iterator = map->find(num+i);
+        ASSERT(iterator != map->end(), "[%d] Fuck my ass at %d", num, num+i);
+        int search = iterator->second;
 		ASSERT(search == num+i*2, "[%d] Fuck my ass at %d: %d!=%d\n", num, num+i, search, num+2*i);
 	}
 	for (i = 0; i < TEST_SIZE; i++)
@@ -49,7 +51,7 @@ void test_slist(int num_threads){
 
 	for (i = 0; i < num_threads; i++){
 		data[i].list = map;
-		data[i].num = TEST_SIZE*i;
+		data[i].num = 10*TEST_SIZE*i;
 		pthread_create(threads+i, NULL, thread_func, data+i);
 	}
 
