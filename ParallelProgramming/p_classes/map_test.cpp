@@ -1,57 +1,54 @@
-#include "PSkipList.h"
-#include "ThreadHelper.h"
-
-#include <stdio.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
+// constructing maps
+#include <cstdio>
+#include <map>
+#include <assert.h>
 
 struct thread_data{
-	struct PSkipList *list;
+	std::map<int,int> *list;
 	int num;
 };
 
 #define NUM_THREADS 8
-#define TEST_SIZE 100000
+#define TEST_SIZE 1000
+
+#define MAX_THREADS 2
 
 #define ASSERT(x, ...) do{ if (!(x)) { printf(__VA_ARGS__); assert(x); } }while(0);
 
 void *thread_func(void *ptr){
-	thread_register();
-
 	struct thread_data *data = (struct thread_data *) ptr;
 
-	struct PSkipList *list = data->list;
+	std::map<int,int> *map = data->list;
 	int num = data->num;
+
+	printf("%d\n", num);
 
 	int i;
 
 	for (i = 0; i < TEST_SIZE; i++)
-		PSkipList_insert(list, num+i, num+i*2);
+		map->insert(std::pair<int,int>(num+i, num+i*2));
 	for (i = 0; i < TEST_SIZE; i++){
-		int search = PSkipList_search(list, num+i);
+		int search = map->find(num+i)->first;
 		ASSERT(search == num+i*2, "[%d] Fuck my ass at %d: %d!=%d\n", num, num+i, search, num+2*i);
 	}
 	for (i = 0; i < TEST_SIZE; i++)
-		PSkipList_delete(list, num+i);
+		map->erase(num+i);
 	for (i = 0; i < TEST_SIZE; i++){
-		int search = PSkipList_search(list, num+i);
-		ASSERT(search == -1, "[%d] Fuck my ass at %d: %d!=-1 for %d\n", num, num+i, search, i);
+		auto search = map->find(num+i);
+		ASSERT(search == map->end(), "[%d] Fuck my ass at %d: element %d was found!\n", num, num+i, search->first);
 	}
 	return 0;
 }
 
 void test_slist(int num_threads){
-	struct PSkipList list;
+	std::map<int,int> *map = new std::map<int,int>();
 	int i;
 
 	pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
 	struct thread_data *data = (struct thread_data *) malloc(sizeof(struct thread_data) * num_threads);
 
-	PSkipList_init(&list);
 	for (i = 0; i < num_threads; i++){
-		data[i].list = &list;
+		data[i].list = map;
 		data[i].num = TEST_SIZE*i;
 		pthread_create(threads+i, NULL, thread_func, data+i);
 	}
@@ -60,9 +57,7 @@ void test_slist(int num_threads){
 		pthread_join(threads[i], NULL);
 	}
 
-	thread_reset();
-
-	PSkipList_fini(&list);
+	delete map;
 }
 
 int main(int argc, char const *argv[]) {
