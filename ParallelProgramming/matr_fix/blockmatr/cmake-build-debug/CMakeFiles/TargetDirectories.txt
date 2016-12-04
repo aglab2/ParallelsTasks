@@ -1,3 +1,0 @@
-/home/aglab2/Documents/parallels/ParallelProgramming/matr_fix/blockmatr/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/aglab2/Documents/parallels/ParallelProgramming/matr_fix/blockmatr/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/aglab2/Documents/parallels/ParallelProgramming/matr_fix/blockmatr/cmake-build-debug/CMakeFiles/blockmatr.dir

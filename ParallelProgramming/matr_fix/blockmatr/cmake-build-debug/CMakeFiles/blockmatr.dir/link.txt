@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/blockmatr.dir/main.cc.o  -o blockmatr 
