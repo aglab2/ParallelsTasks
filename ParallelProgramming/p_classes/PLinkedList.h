@@ -1,14 +1,11 @@
 #ifndef __PLINKEDLIST_H_
 #define __PLINKEDLIST_H_
 
-#include <urcu.h>
-
 struct PLinkedList{
 	struct PLinkedListNode *head;
 };
 
 struct PLinkedListNode{
-	struct rcu_head rcu;
 	struct PLinkedListNode *next;
 	struct PLinkedListNode *down;
 	int key;

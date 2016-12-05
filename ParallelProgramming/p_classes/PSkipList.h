@@ -3,7 +3,7 @@
 
 #include "PLinkedList.h"
 
-#define TOWER_HEIGHT 16
+#define TOWER_HEIGHT 32
 
 struct PSkipList{
 	struct PLinkedList towers[TOWER_HEIGHT];

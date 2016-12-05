@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX_THREADS 64
+#define MAX_THREADS 128
 struct drand48_data data[MAX_THREADS];
 
 extern __thread int thread_num;

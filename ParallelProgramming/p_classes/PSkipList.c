@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include <urcu.h>
-
 void PSkipList_init(struct PSkipList *slist){
 	int index;
 
@@ -66,7 +64,10 @@ int PSkipList_search(struct PSkipList *slist, int key){
 	struct PLinkedListNode *foundNode;
 
 	for (index = 0; index < TOWER_HEIGHT; index++){
-		foundNode = PLinkedList_searchClosestNodeFromNode(&slist->towers[index], prevNode, key, &prevNode);
+		if (prevNode != NULL)
+			foundNode = PLinkedList_searchClosestNodeFromNode(&slist->towers[index], prevNode, key, &prevNode);
+		else
+			foundNode = PLinkedList_searchClosestNode(&slist->towers[index], key, &prevNode);
 		if (foundNode && foundNode->key == key) return foundNode->value;
 		prevNode = prevNode -> down;
 	}
@@ -78,7 +79,7 @@ void PSkipList_delete(struct PSkipList *slist, int key){
 	struct PLinkedListNode *prevs[TOWER_HEIGHT] = {};
 	struct PLinkedListNode *searches[TOWER_HEIGHT] = {};
 
-	searches[0] = PLinkedList_searchClosestNodeFromNode(&slist->towers[0], slist->towers[0].head, key, &prevs[0]);
+	searches[0] = PLinkedList_searchClosestNode(&slist->towers[0], key, &prevs[0]);
 	if(searches[0] && searches[0]->key == key){
 		struct PLinkedListNode *nextNode;
 		do{
@@ -90,7 +91,10 @@ void PSkipList_delete(struct PSkipList *slist, int key){
 
 	for (index = 1; index < TOWER_HEIGHT; index++){
 		if (!found){
-			searches[index] = PLinkedList_searchClosestNodeFromNode(&slist->towers[index], prevs[index-1]->down, key, &prevs[index]);
+			if (prevs[index-1]->down)
+				searches[index] = PLinkedList_searchClosestNodeFromNode(&slist->towers[index], prevs[index-1]->down, key, &prevs[index]);
+			else
+				searches[index] = PLinkedList_searchClosestNode(&slist->towers[index], key, &prevs[index]);
 		}else{
 			searches[index] = searches[index-1] -> down;
 		}

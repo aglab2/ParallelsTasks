@@ -8,11 +8,7 @@ struct thread_data{
 	int num;
 };
 
-#define NUM_THREADS 8
-#define TEST_SIZE 1000
-
-#define MAX_THREADS 4
-
+#define TEST_SIZE 2048000
 #define ASSERT(x, ...) do{ if (!(x)) { printf(__VA_ARGS__); assert(x); } }while(0);
 
 void *thread_func(void *ptr){
@@ -20,8 +16,6 @@ void *thread_func(void *ptr){
 
 	std::map<int,int> *map = data->list;
 	int num = data->num;
-
-	printf("%d\n", num);
 
 	int i;
 
@@ -42,33 +36,19 @@ void *thread_func(void *ptr){
 	return 0;
 }
 
-void test_slist(int num_threads){
-	std::map<int,int> *map = new std::map<int,int>();
-	int i;
-
-	pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
-	struct thread_data *data = (struct thread_data *) malloc(sizeof(struct thread_data) * num_threads);
-
-	for (i = 0; i < num_threads; i++){
-		data[i].list = map;
-		data[i].num = 10*TEST_SIZE*i;
-		pthread_create(threads+i, NULL, thread_func, data+i);
-	}
-
-	for (i = 0; i < num_threads; i++){
-		pthread_join(threads[i], NULL);
-	}
-
-	delete map;
-}
-
 int main(int argc, char const *argv[]) {
-	int num_threads = 0;
-	for (num_threads = 1; num_threads < MAX_THREADS; num_threads*=2){
-		clock_t start = clock();
-		test_slist(num_threads);
-		clock_t end = clock();
-		printf("%d: %lg\n", num_threads, (end-start)/(double)CLOCKS_PER_SEC);
-	}
+	clock_t start = clock();
+		
+	std::map<int,int> *map = new std::map<int,int>();
+	struct thread_data data;
+	data.list = map;
+	data.num = 0;
+	
+	thread_func(&data);
+	free(map);
+	
+	clock_t end = clock();
+
+	printf("%lg\n", (end-start)/(double)CLOCKS_PER_SEC);	
 	return 0;
 }
